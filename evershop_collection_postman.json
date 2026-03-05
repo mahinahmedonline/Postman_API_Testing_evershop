@@ -1,0 +1,355 @@
+{
+  "info": {
+    "_postman_id": "484caf54-7dea-4246-9233-58cd2c22f574",
+    "name": "My Collection",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52842182",
+    "_collection_link": "https://go.postman.co/collection/52842182-484caf54-7dea-4246-9233-58cd2c22f574?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "search",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var responseBody = pm.response.json();",
+              "console.log(responseBody);",
+              "const items = responseBody.eContext.graphqlResponse.e35wux4h7ml3y45nz.products.items;",
+              "const productName = items[0].name;",
+              "const productSku = items[0].sku;",
+              "pm.collectionVariables.set(\"product_name\", productName);",
+              "pm.collectionVariables.set(\"product_sku\", productSku);",
+              "const searchText = pm.collectionVariables.get(\"search_text\")",
+              "pm.test(\"200\",()=>{",
+              "    pm.expect(200).eql(pm.response.code)",
+              "})",
+              "pm.test(\"true\", ()=>{",
+              "    pm.expect(true).eql(responseBody.success)",
+              "})",
+              "pm.test(\"than 0\",()=>{",
+              "    pm.expect(items.length).greaterThan(0);",
+              "})",
+              "pm.test(\"name\",()=>{",
+              "    pm.expect(items[0].name).include(searchText)",
+              "})",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const searchTextList = [\"Cup\", \"Desk\", \"Black\", \"White\"]\r",
+              "\r",
+              "function getRandomInteger(min,max){\r",
+              "    min = Math.ceil(min);\r",
+              "    max = Math.floor(max);\r",
+              "    return Math.floor(Math.random()*(max-min +1)) + min;\r",
+              "}\r",
+              "const searchText = searchTextList[getRandomInteger(0,3)]\r",
+              "console.log(searchText);\r",
+              "pm.collectionVariables.set(\"search_text\", searchText);\r",
+              "\r",
+              "\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://demo.evershop.io/search?keyword={{search_text}}&ajax=true",
+          "protocol": "https",
+          "host": ["demo", "evershop", "io"],
+          "path": ["search"],
+          "query": [
+            {
+              "key": "keyword",
+              "value": "{{search_text}}"
+            },
+            {
+              "key": "ajax",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "addToCart",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "function getRandomInteger(min,max){\r",
+              "    min = Math.ceil(min);\r",
+              "    max = Math.floor(max);\r",
+              "    return Math.floor(Math.random()*(max-min +1)) + min;\r",
+              "}\r",
+              "\r",
+              "const productQty = getRandomInteger(1,5);\r",
+              "pm.collectionVariables.set(\"product_qty\", productQty);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var responseBody = pm.response.json();",
+              "",
+              "pm.test(\"is 200.\", () => {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "if (pm.response.code === 200) {",
+              "    const actualSku = responseBody.data.item.product_sku;",
+              "    const expectedSku = pm.collectionVariables.get(\"product_sku\");",
+              "    const actualQty = responseBody.data.item.qty;",
+              "    const preTotalQty = parseInt(pm.collectionVariables.get(\"pre_total_qty\")) || 0;",
+              "    const expectedQty = preTotalQty + parseInt(pm.collectionVariables.get(\"product_qty\"));",
+              "    pm.collectionVariables.set(\"total_qty\", actualQty);",
+              "    pm.collectionVariables.set(\"pre_total_qty\", actualQty);",
+              "",
+              "    pm.test(\"sku\", () => {",
+              "        pm.expect(expectedSku).eql(actualSku);",
+              "    });",
+              "",
+              "    pm.test(\"qty\", () => {",
+              "        pm.expect(expectedQty).eql(actualQty);",
+              "    });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"sku\": \"{{product_sku}}\",\r\n    \"qty\": \"{{product_qty}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://demo.evershop.io/api/cart/mine/items",
+          "protocol": "https",
+          "host": ["demo", "evershop", "io"],
+          "path": ["api", "cart", "mine", "items"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "pre_viewCart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var responseBody = pm.response.json();",
+              "const itemsParent = responseBody.eContext.graphqlResponse.e35wux4h7ml3y45oy;",
+              "let totalQty;",
+              "try{",
+              "    totalQty = itemsParent.totalQty;",
+              "}catch(error){",
+              "    totalQty = 0;",
+              "    console.log(\"cart blank\");",
+              "}",
+              "pm.collectionVariables.set(\"pre_total_qty\", totalQty);",
+              "",
+              "pm.test(\"is 200.\",()=>{",
+              "    pm.expect(200).to.eql(pm.response.code);",
+              "})"
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://demo.evershop.io/cart?ajax=true",
+          "protocol": "https",
+          "host": ["demo", "evershop", "io"],
+          "path": ["cart"],
+          "query": [
+            {
+              "key": "ajax",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "post_viewCart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var responseBody = pm.response.json();",
+              "const itemsParent = responseBody.eContext.graphqlResponse.e35wux4h7ml3y45oy;",
+              "let actualQty;",
+              "let removeApiEndPoint = \"\";",
+              "try {",
+              "    actualQty = parseInt(itemsParent.totalQty);",
+              "    removeApiEndPoint = itemsParent.items[0].removeApi;",
+              "} catch(error) {",
+              "    actualQty = 0;",
+              "    console.log(\"cart blank\");",
+              "}",
+              "const expectedQty = parseInt(pm.collectionVariables.get(\"pre_total_qty\"));",
+              "",
+              "pm.collectionVariables.set(\"remove_api\", removeApiEndPoint);",
+              "pm.collectionVariables.set(\"total_qty\", actualQty);",
+              "",
+              "pm.test(\"is 200.\", () => {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});",
+              "",
+              "pm.test(\"total\", () => {",
+              "    pm.expect(expectedQty).to.eql(actualQty);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://demo.evershop.io/cart?ajax=true",
+          "protocol": "https",
+          "host": ["demo", "evershop", "io"],
+          "path": ["cart"],
+          "query": [
+            {
+              "key": "ajax",
+              "value": "true",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "removeCart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"is 200.\", () => {",
+              "    pm.expect(pm.response.code).to.eql(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "https://demo.evershop.io{{remove_api}}",
+          "protocol": "https",
+          "host": ["demo", "evershop", "io{{remove_api}}"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "search_text",
+      "value": ""
+    },
+    {
+      "key": "product_name",
+      "value": ""
+    },
+    {
+      "key": "product_sku",
+      "value": ""
+    },
+    {
+      "key": "product_qty",
+      "value": ""
+    },
+    {
+      "key": "total_qty",
+      "value": ""
+    },
+    {
+      "key": "pre_total_qty",
+      "value": ""
+    },
+    {
+      "key": "remove_api",
+      "value": ""
+    }
+  ]
+}
